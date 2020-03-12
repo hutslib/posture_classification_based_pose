@@ -1,24 +1,21 @@
 #!user/bin/python
 # _*_ coding: utf-8 _*_
+
 # -------------------------------------------
-#  @description: svm classification using sklearn
+#  @description:  decision tree using sklearn
 #  @author: hts
-#  @data: 2020-03-12
+#  @data: 2020-03-13
 #  @version: 1.0
 #  @github: hutslib
 # -------------------------------------------
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
-from sklearn.externals import joblib
-from sklearn.metrics import classification_report
-# from sklearn.preprocessing import StandardScaler  
-from sklearn.svm import SVC  
+from sklearn.tree import DecisionTreeClassifier
 import numpy as np
-# from numpy.random import shuffle
 import os
 import sys
 import argparse
-class train_svm():
+
+class train_decision_tree():
 
     def __init__(self, keypoints_path, npsave_path, command, model_path):
         
@@ -44,10 +41,7 @@ class train_svm():
                 self.feature = np.insert(self.feature, 0, Feature, axis=0)
                 self.label = np.insert(self.label, 0, Label, axis=0)
             #print(self.feature[array])
-            #print(type(self.feature))
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/feature.txt', self.feature, fmt = '%f')
-        print('---loading feature done!---')
-        print('feature sample size: ', np.shape(self.feature) )
+            #print(type(self.feature))train_test_split) )
         print()
             #self.label.append(self.label.generate())
         np.savetxt('/home/hts/posture_classification_based_pose/svm/label.txt', self.label, fmt = '%f')
@@ -114,63 +108,21 @@ class train_svm():
         self.label = sc.fit_transform(self.label)
         return self.feature, self.label
 
-    def svm_training(self):
+    def decision_tree_training(self):
 
-        print('---start training svm---')
+        print('---start training decision tree---')
         #split dataset in two equal parts
         #print(np.shape(self.feature), np.shape(self.label))
-        X_train, X_test, Y_train, Y_test = train_test_split(self.feature, self.label, test_size = 0.5, random_state = 0)
+        X_train, X_test, Y_train, Y_test = train_test_split(self.feature, self.label, test_size = 0.25, random_state = 0)
         np.savetxt('/home/hts/hts2019/openpose/svm/X_train.txt', X_train, fmt = '%f')
         np.savetxt('/home/hts/hts2019/openpose/svm/X_test.txt', X_test, fmt = '%f')
         np.savetxt('/home/hts/hts2019/openpose/svm/Y_train.txt', Y_train, fmt = '%d')
         np.savetxt('/home/hts/hts2019/openpose/svm/Y_test.txt', Y_test, fmt = '%d')
         print('---split data done!---')
         print()
-        #set the parameters by cross-validation
-        tuned_parameters = [{'kernel': ['rbf'], 'gamma': np.logspace(-3, 3, 7, endpoint = True), 
-                             'C': np.logspace(-3, 3, 7, endpoint = True)},
-                             {'kernel': ['linear'],'C': np.logspace(-3, 3, 7, endpoint = True)},
-                             {'kernel': ['poly'], 'C': np.logspace(-3, 3, 7, endpoint = True), 'degree': [1, 2, 3], 'gamma': np.logspace(-3, 3, 7, endpoint = True)}]
-        scores = ['precision', 'recall']
-
-        for score in scores:
-
-            print ('tuning hyper-parameters for %s' % score)
-            clf = GridSearchCV(SVC(decision_function_shape='ovr'), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
-            print(np.shape(X_train), np.shape(Y_train.ravel()))
-            clf.fit(X_train, Y_train.ravel())
-
-        print("Best parameters set found on development set:")  
-        print()  
-        print(clf.best_params_)  
-        print()  
-        print("Grid scores on development set:")  
-        print()
-        means = clf.cv_results_['mean_test_score']
-        stds = clf.cv_results_['std_test_score']
-        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
-            print("%0.3f (+/-%0.03f) for %r"
-                % (mean, std * 2, params))
-        # for params, mean_score, scores in clf.cv_results_:  
-        #     print("%0.3f (+/-%0.03f) for %r"  
-        #         % (mean_score, scores.std() * 2, params))  
-        print()  
-    
-        print("Detailed classification report:")  
-        print()  
-        print("The model is trained on the full development set.")  
-        print("The scores are computed on the full evaluation set.")  
-        print()
-        target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
-        Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_true.txt', Y_true, fmt = '%d')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_pred.txt', Y_pred, fmt = '%d')
-        print(classification_report(Y_true, Y_pred, target_names = target_names))  
-        print()
-
-        print('SVM model saving ......')
-        model_save_path = '/home/hts/hts2019/openpose/svm/train_madel1.m'
-        joblib.dump(clf, model_save_path)
+        classifier = DecisionTreeClassifier(criterion = 'gini', random_state = 0) # 默认使用CART算法
+        cross_val_score(classifier, X_train, Y_train, cv=5)
+        # classifier.fit(X_train, Y_train)
         
         return 
     
