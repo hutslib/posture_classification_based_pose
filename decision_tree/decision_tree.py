@@ -114,7 +114,11 @@ class train_decision_tree():
         return self.feature, self.label
 
     def decision_tree_training(self):
-
+                
+        self.target_names = ['lying', 'lie on the side', 'sitting', 'standing']
+        self.feature_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14',
+                              '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', 
+                              '28', '29', '30', '31', '32', '33'] 
         print('---start training decision tree---')
         #split dataset in two equal parts
         #print(np.shape(self.feature), np.shape(self.label))
@@ -131,7 +135,8 @@ class train_decision_tree():
         # cross_val_score(classifier, X_train, Y_train, cv=5)
         # visualization
         dot_data = StringIO()
-        tree.export_graphviz(clf, out_file=dot_data)
+        tree.export_graphviz(clf, out_file=dot_data, feature_names = self.feature_names, class_names = self.target_names, 
+                            filled = True, rounded = True, impurity = False )
         graph = pydotplus.graph_from_dot_data(dot_data.getvalue()) 
         graph.write_pdf("decision_tree.pdf")  
         # classifier.fit(X_train, Y_train)
@@ -141,11 +146,10 @@ class train_decision_tree():
         print("The model is trained on the full development set.")  
         print("The scores are computed on the full evaluation set.")  
         print()
-        target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
         Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
         np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_true.txt', Y_true, fmt = '%d')
         np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_pred.txt', Y_pred, fmt = '%d')
-        print(classification_report(Y_true, Y_pred, target_names = target_names))  
+        print(classification_report(Y_true, Y_pred, target_names = self.target_names))  
         print()
 
         print('Decision Tree model saving ......')
