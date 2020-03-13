@@ -10,10 +10,12 @@
 # -------------------------------------------
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.externals.six import StringIO
 import numpy as np
 import os
 import sys
 import argparse
+import pydot
 
 class train_decision_tree():
 
@@ -44,7 +46,7 @@ class train_decision_tree():
             #print(type(self.feature))train_test_split) )
         print()
             #self.label.append(self.label.generate())
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/label.txt', self.label, fmt = '%f')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/label.txt', self.label, fmt = '%d')
         print('---loading label done!---')
         print('label size: ', np.shape(self.label))
         print()
@@ -82,7 +84,7 @@ class train_decision_tree():
             axisx = np.shape(array2)[0]
             axisy = np.shape(array2)[1]
             #print(axisx, axisy)
-            np.savetxt(self.npsave_path, array2, fmt = '%d')
+            np.savetxt(self.npsave_path, array2, fmt = '%f')
             return array2, axisx, axisy
         
     def label_generate(self):
@@ -114,15 +116,36 @@ class train_decision_tree():
         #split dataset in two equal parts
         #print(np.shape(self.feature), np.shape(self.label))
         X_train, X_test, Y_train, Y_test = train_test_split(self.feature, self.label, test_size = 0.25, random_state = 0)
-        np.savetxt('/home/hts/hts2019/openpose/svm/X_train.txt', X_train, fmt = '%f')
-        np.savetxt('/home/hts/hts2019/openpose/svm/X_test.txt', X_test, fmt = '%f')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_train.txt', Y_train, fmt = '%d')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_test.txt', Y_test, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/X_train.txt', X_train, fmt = '%f')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/X_test.txt', X_test, fmt = '%f')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_train.txt', Y_train, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_test.txt', Y_test, fmt = '%d')
         print('---split data done!---')
         print()
-        classifier = DecisionTreeClassifier(criterion = 'gini', random_state = 0) # 默认使用CART算法
-        cross_val_score(classifier, X_train, Y_train, cv=5)
+        clf = DecisionTreeClassifier(criterion = 'gini', random_state = 0) # 默认使用CART算法
+        # cross_val_score(classifier, X_train, Y_train, cv=5)
+        # visualization
+        dot_data = StringIO()
+        tree.export_graphviz(clf, out_file=dot_data)
+        graph = pydot.graph_from_dot_data(dot_data.getvalue()) 
+        graph.write_pdf("decision_tree.pdf")  
         # classifier.fit(X_train, Y_train)
+        #验证测试集
+        print("Detailed classification report:")  
+        print()  
+        print("The model is trained on the full development set.")  
+        print("The scores are computed on the full evaluation set.")  
+        print()
+        target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
+        Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_true.txt', Y_true, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_pred.txt', Y_pred, fmt = '%d')
+        print(classification_report(Y_true, Y_pred, target_names = target_names))  
+        print()
+
+        print('Decision Tree model saving ......')
+        model_save_path = '/home/hts/posture_classification_based_pose/decision_tree/train_decision_tree_model.m'
+        joblib.dump(clf, model_save_path)
         
         return 
     
@@ -143,8 +166,8 @@ class train_decision_tree():
         print()  
         target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
         Y_true, Y_pred = self.label.ravel(), my_clf.predict(self.feature)
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_true.txt', Y_true, fmt = '%d')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_true.txt', Y_true, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/Y_pred.txt', Y_pred, fmt = '%d')
         print(classification_report(Y_true, Y_pred, target_names = target_names))
         
         return

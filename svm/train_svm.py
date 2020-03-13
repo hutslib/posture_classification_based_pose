@@ -120,10 +120,10 @@ class train_svm():
         #split dataset in two equal parts
         #print(np.shape(self.feature), np.shape(self.label))
         X_train, X_test, Y_train, Y_test = train_test_split(self.feature, self.label, test_size = 0.5, random_state = 0)
-        np.savetxt('/home/hts/hts2019/openpose/svm/X_train.txt', X_train, fmt = '%f')
-        np.savetxt('/home/hts/hts2019/openpose/svm/X_test.txt', X_test, fmt = '%f')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_train.txt', Y_train, fmt = '%d')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_test.txt', Y_test, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/X_train.txt', X_train, fmt = '%f')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/X_test.txt', X_test, fmt = '%f')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_train.txt', Y_train, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_test.txt', Y_test, fmt = '%d')
         print('---split data done!---')
         print()
         #set the parameters by cross-validation
@@ -163,13 +163,13 @@ class train_svm():
         print()
         target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
         Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_true.txt', Y_true, fmt = '%d')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
         print(classification_report(Y_true, Y_pred, target_names = target_names))  
         print()
 
         print('SVM model saving ......')
-        model_save_path = '/home/hts/hts2019/openpose/svm/train_madel1.m'
+        model_save_path = '/home/hts/posture_classification_based_pose/svm/train_madel1.m'
         joblib.dump(clf, model_save_path)
         
         return 
@@ -191,8 +191,8 @@ class train_svm():
         print()  
         target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
         Y_true, Y_pred = self.label.ravel(), my_clf.predict(self.feature)
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_true.txt', Y_true, fmt = '%d')
-        np.savetxt('/home/hts/hts2019/openpose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
         print(classification_report(Y_true, Y_pred, target_names = target_names))
         
         return
