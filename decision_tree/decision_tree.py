@@ -9,13 +9,16 @@
 #  @github: hutslib
 # -------------------------------------------
 from sklearn.model_selection import train_test_split
+from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.externals.six import StringIO
+from sklearn.metrics import classification_report
+from sklearn.externals import joblib
 import numpy as np
 import os
 import sys
 import argparse
-import pydot
+import pydotplus
 
 class train_decision_tree():
 
@@ -46,7 +49,7 @@ class train_decision_tree():
             #print(type(self.feature))train_test_split) )
         print()
             #self.label.append(self.label.generate())
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/label.txt', self.label, fmt = '%d')
+        np.savetxt('/home/hts/posture_classification_based_pose/decision_tree/label.txt', self.label, fmt = '%d')
         print('---loading label done!---')
         print('label size: ', np.shape(self.label))
         print()
@@ -123,11 +126,13 @@ class train_decision_tree():
         print('---split data done!---')
         print()
         clf = DecisionTreeClassifier(criterion = 'gini', random_state = 0) # 默认使用CART算法
+        print(np.shape(X_train), np.shape(Y_train.ravel()))
+        clf.fit(X_train, Y_train.ravel())
         # cross_val_score(classifier, X_train, Y_train, cv=5)
         # visualization
         dot_data = StringIO()
         tree.export_graphviz(clf, out_file=dot_data)
-        graph = pydot.graph_from_dot_data(dot_data.getvalue()) 
+        graph = pydotplus.graph_from_dot_data(dot_data.getvalue()) 
         graph.write_pdf("decision_tree.pdf")  
         # classifier.fit(X_train, Y_train)
         #验证测试集
@@ -180,8 +185,8 @@ class train_decision_tree():
         try:
             if command == 'predict_pic':
                 self.predict_pic()
-            elif command == 'svm_training':
-                self.svm_training()
+            elif command == 'training':
+                self.decision_tree_training()
             elif command == 'predict_video':
                 self.predict_video()
             else:
@@ -197,8 +202,8 @@ if __name__ == "__main__":
                         help = "path to the folder for the json to be processed (default: None)")
     parser.add_argument("--npsave_path", type = str, default = None,
                         help = "path to the folder for the results to be saved (default: None)")
-    parser.add_argument("--command", type = str, default = 'svm_training',
-                        help = "next command(default: 'svm_training')")    
+    parser.add_argument("--command", type = str, default = 'training',
+                        help = "next command(default: 'training')")    
     parser.add_argument("--model_path", type = str, default = None,
                         help="path to the model to be loaded (default: None)")    
     # parser.add_argument("--label", type=str, default=None,
@@ -209,4 +214,4 @@ if __name__ == "__main__":
     command = args.command
     model_path = args.model_path
     # label = args.label
-    train_svm(keypoints_path, npsave_path, command, model_path)
+    train_decision_tree(keypoints_path, npsave_path, command, model_path)
