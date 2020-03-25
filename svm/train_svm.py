@@ -7,6 +7,13 @@
 #  @version: 1.0
 #  @github: hutslib
 # -------------------------------------------
+# -------------------------------------------
+#  @description: add probablity svm
+#  @author: hts
+#  @data: 2020-03-25
+#  @version: 2.0
+#  @github: hutslib
+# -------------------------------------------
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.externals import joblib
@@ -29,7 +36,7 @@ class train_svm():
         first_time = True
         #生成特征和标签
         for filename in files:
-            print(filename)
+            print('\033[0;32m filename %d \033[0m')
             self.keypoints_path = self.keypoints_folder + filename + '/keypoints.txt'
             print(self.keypoints_path)
             self.filename = filename
@@ -69,12 +76,12 @@ class train_svm():
         with open(self.keypoints_path, 'r') as file:
             my_data = file.readlines()
             count = 0
-            array1 = np.zeros(33)
-            array2 = np.zeros((1,33))
+            array1 = np.zeros(48)
+            array2 = np.zeros((1,48))
             for line in my_data:
                 #print(line)
                 count += 1
-                if count == 34:
+                if count == 49:
                     count = 0
                     #print('ok')
                     #print(array1)
@@ -96,14 +103,19 @@ class train_svm():
         array3 = np.empty((self.lenx, 1))
         for index in range(self.lenx):
             if self.filename == 'a':
+                print('a')
                 array3[index] = 1
             if self.filename == 'b':
+                print('b')               
                 array3[index] = 2
             if self.filename == 'c':
+                print('c')
                 array3[index] = 3
             if self.filename == 'd':
+                print('d')                
                 array3[index] = 4
             if self.filename == 'e':
+                print('e')   
                 array3[index] = 5
         #print(array3)
         return array3
@@ -114,7 +126,7 @@ class train_svm():
         self.label = sc.fit_transform(self.label)
         return self.feature, self.label
 
-    def svm_training(self):
+    def svm_training(self, use_pro = False):
 
         print('---start training svm---')
         #split dataset in two equal parts
@@ -136,7 +148,11 @@ class train_svm():
         for score in scores:
 
             print ('tuning hyper-parameters for %s' % score)
-            clf = GridSearchCV(SVC(decision_function_shape='ovr'), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+            if use_pro == True:
+                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+            else:
+                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+
             print(np.shape(X_train), np.shape(Y_train.ravel()))
             clf.fit(X_train, Y_train.ravel())
 
@@ -162,10 +178,20 @@ class train_svm():
         print("The scores are computed on the full evaluation set.")  
         print()
         target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
-        Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
-        print(classification_report(Y_true, Y_pred, target_names = target_names))  
+        if use_pro == True:
+            Y_true, Y_pred = Y_test.ravel(), clf.predict_proba(X_test)
+            Y_result = Y_pred[:,1]
+            # print(classification_report(Y_true, Y_result, target_names = target_names))  
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_result.txt', Y_pred, fmt = '%d')
+
+        else:
+            Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
+            print(classification_report(Y_true, Y_pred, target_names = target_names))  
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+        # print(classification_report(Y_true, Y_pred, target_names = target_names))  
         print()
 
         print('SVM model saving ......')
@@ -174,26 +200,39 @@ class train_svm():
         
         return 
     
-    def predict_pic(self):
+    def predict_pic(self, use_pro = False):
 
         my_clf = joblib.load(self.model_path)
-        my_pre = my_clf.predict(self.feature)
-        target_names = ['lying', 'lie on the side', 'sitting', 'standing']
+        if use_pro == Ture:
+            my_pre = my_clf.predict_proba(self.feature)
+        else:
+            my_pre = my_clf.predict(self.feature)
+        # target_names = ['lying', 'lie on the side', 'sitting', 'standing']
         #print(my_pre, target_names[my_pre])
         print(my_pre)
         
         return
     
-    def predict_video(self):
+    def predict_video(self, use_pro = False):
 
         my_clf = joblib.load(self.model_path)
         print("Detailed classification report:")  
         print()  
-        target_names = ['lying', 'lie on the side', 'sitting', 'standing'] 
-        Y_true, Y_pred = self.label.ravel(), my_clf.predict(self.feature)
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
-        print(classification_report(Y_true, Y_pred, target_names = target_names))
+        target_names = ['lying', 'lie on the side', 'sitting', 'standing']
+        if use_pro == True:
+            Y_true, Y_pred = Y_test.ravel(), clf.predict_proba(X_test)
+            Y_result = Y_pred[:,1]
+            # print(classification_report(Y_true, Y_result, target_names = target_names))  
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_result.txt', Y_pred, fmt = '%d')
+
+        else:
+            Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
+            print(classification_report(Y_true, Y_pred, target_names = target_names))  
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+            print(classification_report(Y_true, Y_pred, target_names = target_names))
         
         return
   
@@ -207,6 +246,8 @@ class train_svm():
                 self.predict_pic()
             elif command == 'svm_training':
                 self.svm_training()
+            elif command == 'pro_svm_training':
+                self.svm_training(use_pro=True)
             elif command == 'predict_video':
                 self.predict_video()
             else:
@@ -218,11 +259,11 @@ class train_svm():
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--keypoints_path", type = str, default = None,
+    parser.add_argument("--keypoints_path", type = str, default = '/home/hts/Videos/202003keypoints/',
                         help = "path to the folder for the json to be processed (default: None)")
-    parser.add_argument("--npsave_path", type = str, default = None,
+    parser.add_argument("--npsave_path", type = str, default = '/home/hts/Videos/202003keypoints/',
                         help = "path to the folder for the results to be saved (default: None)")
-    parser.add_argument("--command", type = str, default = 'svm_training',
+    parser.add_argument("--command", type = str, default = 'pro_svm_training',
                         help = "next command(default: 'svm_training')")    
     parser.add_argument("--model_path", type = str, default = None,
                         help="path to the model to be loaded (default: None)")    
