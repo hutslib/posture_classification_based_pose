@@ -1,14 +1,13 @@
 some ml code to achieve posture classification based on pose
 ## TODO
+(1) 2D
 - [x] svm
 - [x] decision tree
-- [ ]bayesian
+- [ ] bayesian
 - [ ] pro svm
 - [ ] BP
 - [ ] DS 证据理论
 - [ ] 分层分类
-
-(1) 2D
 (2) 3D
 
 
