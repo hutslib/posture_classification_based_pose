@@ -27,11 +27,13 @@ import sys
 import argparse
 class train_svm():
 
-    def __init__(self, keypoints_path, npsave_path, command, model_path):
+    def __init__(self, keypoints_path, model_save_path, npsave_path, command, model_path):
         
         self.keypoints_folder = keypoints_path
+        self.model_save_path = model_save_path
         self.command = command
         self.model_path = model_path
+        self.np_path = npsave_path
         files = os.listdir(self.keypoints_folder)
         first_time = True
         #生成特征和标签
@@ -56,12 +58,12 @@ class train_svm():
                     self.label = np.insert(self.label, 0, Label, axis=0)
             #print(self.feature[array])
             #print(type(self.feature))
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/feature.txt', self.feature, fmt = '%f')
+        np.savetxt(self.np_path+'feature.txt', self.feature, fmt = '%f')
         print('---loading feature done!---')
         print('feature sample size: ', np.shape(self.feature) )
         print()
             #self.label.append(self.label.generate())
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/label.txt', self.label, fmt = '%f')
+        np.savetxt(self.np_path+'label.txt', self.label, fmt = '%f')
         print('---loading label done!---')
         print('label size: ', np.shape(self.label))
         print()
@@ -80,12 +82,12 @@ class train_svm():
         with open(self.keypoints_path, 'r') as file:
             my_data = file.readlines()
             count = 0
-            array1 = np.zeros(48)
-            array2 = np.zeros((1,48))
+            array1 = np.zeros(32,dtype=float)
+            array2 = np.zeros((1,32),dtype=float)
             for line in my_data:
                 #print(line)
                 count += 1
-                if count == 49:
+                if count == 33:
                     count = 0
                     #print('ok')
                     #print(array1)
@@ -107,19 +109,19 @@ class train_svm():
         array3 = np.empty((self.lenx, 1))
         for index in range(self.lenx):
             if self.filename == 'a':
-                print('a')
+                print('%d a' %index)
                 array3[index] = 1
             if self.filename == 'b':
-                print('b')               
+                print('%d b' %index)
                 array3[index] = 2
             if self.filename == 'c':
-                print('c')
+                print('%d c' %index)
                 array3[index] = 3
             if self.filename == 'd':
-                print('d')                
+                print('%d d' %index)
                 array3[index] = 4
             if self.filename == 'e':
-                print('e')   
+                print('%d e' %index)
                 array3[index] = 5
         #print(array3)
         return array3
@@ -136,10 +138,10 @@ class train_svm():
         #split dataset in two equal parts
         #print(np.shape(self.feature), np.shape(self.label))
         X_train, X_test, Y_train, Y_test = train_test_split(self.feature, self.label, test_size = 0.5, random_state = 0)
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/X_train.txt', X_train, fmt = '%f')
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/X_test.txt', X_test, fmt = '%f')
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_train.txt', Y_train, fmt = '%d')
-        np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_test.txt', Y_test, fmt = '%d')
+        np.savetxt(self.np_path+'X_train.txt', X_train, fmt = '%f')
+        np.savetxt(self.np_path+'X_test.txt', X_test, fmt = '%f')
+        np.savetxt(self.np_path+'Y_train.txt', Y_train, fmt = '%d')
+        np.savetxt(self.np_path+'Y_test.txt', Y_test, fmt = '%d')
         print('---split data done!---')
         print()
         #set the parameters by cross-validation
@@ -153,9 +155,9 @@ class train_svm():
 
             print ('tuning hyper-parameters for %s' % score)
             if use_pro == True:
-                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True, verbose = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
             else:
-                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+                clf = GridSearchCV(SVC(decision_function_shape='ovr', verbose = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
 
             print(np.shape(X_train), np.shape(Y_train.ravel()))
             clf.fit(X_train, Y_train.ravel())
@@ -186,21 +188,21 @@ class train_svm():
             Y_true, Y_pred = Y_test.ravel(), clf.predict_proba(X_test)
             Y_result = Y_pred[:,1]
             # print(classification_report(Y_true, Y_result, target_names = target_names))  
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_result.txt', Y_pred, fmt = '%d')
+            np.savetxt(self.np_path+'Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt(self.np_path+'Y_pred.txt', Y_pred, fmt = '%d')
+            np.savetxt(self.np_path+'Y_result.txt', Y_pred, fmt = '%d')
 
         else:
             Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
             print(classification_report(Y_true, Y_pred, target_names = target_names))  
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+            np.savetxt(self.np_path+'Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt(self.np_path+'Y_pred.txt', Y_pred, fmt = '%d')
         # print(classification_report(Y_true, Y_pred, target_names = target_names))  
         print()
 
         print('SVM model saving ......')
-        model_save_path = '/home/hts/posture_classification_based_pose/svm/train_madel_l2.m'
-        joblib.dump(clf, model_save_path)
+        # model_save_path = '/home/hts/posture_classification_based_pose/svm/train_madel_l2.m'
+        joblib.dump(clf, self.model_save_path)
         
         return 
     
@@ -265,6 +267,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--keypoints_path", type = str, default = '/home/hts/Videos/202003keypoints/',
                         help = "path to the folder for the json to be processed (default: None)")
+    parser.add_argument("--model_save_path", type = str, default = '/home/hts/posture_classification_based_pose/svm/train_madel.m',
+                        help = "path to the folder for the json to be processed (default: None)")
     parser.add_argument("--npsave_path", type = str, default = '/home/hts/Videos/202003keypoints/',
                         help = "path to the folder for the results to be saved (default: None)")
     parser.add_argument("--command", type = str, default = 'pro_svm_training',
@@ -275,8 +279,9 @@ if __name__ == "__main__":
     #                     help="label (default: None)")
     args = parser.parse_args()
     keypoints_path = args.keypoints_path
+    model_save_path = args.model_save_path
     npsave_path = args.npsave_path
     command = args.command
     model_path = args.model_path
     # label = args.label
-    train_svm(keypoints_path, npsave_path, command, model_path)
+    train_svm(keypoints_path, model_save_path, npsave_path, command, model_path)
