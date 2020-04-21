@@ -38,7 +38,7 @@ class train_svm():
         first_time = True
         #生成特征和标签
         for filename in files:
-            print('\033[0;32m filename %s \033[0m' %filename)
+            print('\033[0;22m filename %s \033[0m' %filename)
             # self.keypoints_path = self.keypoints_folder + filename + '/keypoints.txt'
             path  = self.keypoints_folder + filename + '/'
             self.filename = filename
@@ -82,12 +82,12 @@ class train_svm():
         with open(self.keypoints_path, 'r') as file:
             my_data = file.readlines()
             count = 0
-            array1 = np.zeros(32,dtype=float)
-            array2 = np.zeros((1,32),dtype=float)
+            array1 = np.zeros(22,dtype=float)
+            array2 = np.zeros((1,22),dtype=float)
             for line in my_data:
                 #print(line)
                 count += 1
-                if count == 33:
+                if count == 23:
                     count = 0
                     #print('ok')
                     #print(array1)
@@ -109,19 +109,19 @@ class train_svm():
         array3 = np.empty((self.lenx, 1))
         for index in range(self.lenx):
             if self.filename == 'a':
-                print('%d a' %index)
+                # print('%d a' %index)
                 array3[index] = 1
             if self.filename == 'b':
-                print('%d b' %index)
+                # print('%d b' %index)
                 array3[index] = 2
             if self.filename == 'c':
-                print('%d c' %index)
+                # print('%d c' %index)
                 array3[index] = 3
             if self.filename == 'd':
-                print('%d d' %index)
+                # print('%d d' %index)
                 array3[index] = 4
             if self.filename == 'e':
-                print('%d e' %index)
+                # print('%d e' %index)
                 array3[index] = 5
         #print(array3)
         return array3
@@ -155,9 +155,9 @@ class train_svm():
 
             print ('tuning hyper-parameters for %s' % score)
             if use_pro == True:
-                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True, verbose = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
             else:
-                clf = GridSearchCV(SVC(decision_function_shape='ovr', verbose = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+                clf = GridSearchCV(SVC(decision_function_shape='ovr'), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
 
             print(np.shape(X_train), np.shape(Y_train.ravel()))
             clf.fit(X_train, Y_train.ravel())
@@ -189,8 +189,8 @@ class train_svm():
             Y_result = Y_pred[:,1]
             # print(classification_report(Y_true, Y_result, target_names = target_names))  
             np.savetxt(self.np_path+'Y_true.txt', Y_true, fmt = '%d')
-            np.savetxt(self.np_path+'Y_pred.txt', Y_pred, fmt = '%d')
-            np.savetxt(self.np_path+'Y_result.txt', Y_pred, fmt = '%d')
+            np.savetxt(self.np_path+'Y_pred.txt', Y_pred, fmt = '%f')
+            np.savetxt(self.np_path+'Y_result.txt', Y_result, fmt = '%f')
 
         else:
             Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
@@ -230,8 +230,8 @@ class train_svm():
             Y_result = Y_pred[:,1]
             # print(classification_report(Y_true, Y_result, target_names = target_names))  
             np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_result.txt', Y_pred, fmt = '%d')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%f')
+            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_result.txt', Y_result, fmt = '%f')
 
         else:
             Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)

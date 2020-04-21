@@ -46,10 +46,10 @@ class train_svm():
         #生成特征和标签
         for filename in files:
             print('\033[0;22m filename %s \033[0m' %filename)
-            self.keypoints_path = self.keypoints_folder + filename + '/keypoints.txt'
+            self.keypoints_path = self.keypoints_folder + filename + '/var.txt'
             print(self.keypoints_path)
             self.filename = filename
-            self.npsave_path = npsave_path + filename + '/np_keypoints.txt'
+            self.npsave_path = npsave_path + filename + '/np_var.txt'
             Feature, self.lenx, self.leny = self.feature_generate()
             Label = self.label_generate()
             if first_time == True:
@@ -67,7 +67,7 @@ class train_svm():
         print('feature sample size: ', np.shape(self.feature) )
         print()
             #self.label.append(self.label.generate())
-        np.savetxt(self.np_path+'label.txt', self.label, fmt = '%f')
+        np.savetxt(self.np_path+'label.txt', self.label, fmt = '%d')
         print('---loading label done!---')
         print('label size: ', np.shape(self.label))
         print()
@@ -86,12 +86,13 @@ class train_svm():
         with open(self.keypoints_path, 'r') as file:
             my_data = file.readlines()
             count = 0
-            array1 = np.zeros(14,dtype=float)
-            array2 = np.zeros((1,14),dtype=float)
+            array1 = np.zeros(2,dtype=float)
+            array2 = np.zeros((1,2),dtype=float)
             for line in my_data:
                 #print(line)
                 count += 1
-                if count == 15:
+                if count == 2:
+                    array1[count-1] = line
                     count = 0
                     #print('ok')
                     #print(array1)
@@ -106,7 +107,7 @@ class train_svm():
             axisx = np.shape(array2)[0]
             axisy = np.shape(array2)[1]
             #print(axisx, axisy)
-            np.savetxt(self.npsave_path, array2, fmt = '%d')
+            np.savetxt(self.npsave_path, array2, fmt = '%f')
             # print(axisx, axisy)
             return array2, axisx, axisy
         
@@ -119,16 +120,16 @@ class train_svm():
                 array3[index] = 1
             if self.filename == 'b':
                 # print('%d b' %index)
-                array3[index] = 2
-            if self.filename == 'c':
-                # print('%d c' %index)
-                array3[index] = 3
+                array3[index] = 1
+            # if self.filename == 'c':
+            #     # print('%d c' %index)
+            #     array3[index] = 3
             if self.filename == 'd':
                 # print('%d d' %index)
-                array3[index] = 4
-            if self.filename == 'e':
-                # print('%d e' %index)
-                array3[index] = 5
+                array3[index] = 2
+            # if self.filename == 'e':
+            #     # print('%d e' %index)
+            #     array3[index] = 2
         #print(array3)
         return array3
 
@@ -161,9 +162,9 @@ class train_svm():
 
             print ('tuning hyper-parameters for %s' % score)
             if use_pro == True:
-                clf = GridSearchCV(SVC(decision_function_shape='ovr', probability = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+                clf = GridSearchCV(SVC(probability = True), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
             else:
-                clf = GridSearchCV(SVC(decision_function_shape='ovr'), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
+                clf = GridSearchCV(SVC(), tuned_parameters, cv = 5, scoring = '%s_weighted' % score)
 
             print(np.shape(X_train), np.shape(Y_train.ravel()))
             clf.fit(X_train, Y_train.ravel())
@@ -189,26 +190,26 @@ class train_svm():
         print("The model is trained on the full development set.")  
         print("The scores are computed on the full evaluation set.")  
         print()
-        target_names = ['lying', 'lie on the side', 'lying on front', 'sitting', 'standing'] 
+        target_names = ['lying', 'standing'] 
         if use_pro == True:
             Y_true, Y_pred = Y_test.ravel(), clf.predict_proba(X_test)
             Y_result = []
             np.savetxt(self.np_path+'Y_true.txt', Y_true, fmt = '%d')
             np.savetxt(self.np_path+'Y_pred.txt', Y_pred, fmt = '%f')
             for pre_res in Y_pred:
-                print(pre_res)
+                # print(pre_res)
                 pre_res = pre_res.tolist()
                 Y_result.append(pre_res.index(max(pre_res))+1)
                 if pre_res.index(max(pre_res)) == 0:
                     print ('lying')
                 if pre_res.index(max(pre_res)) == 1:
-                    print ('lie on the side')
-                if pre_res.index(max(pre_res)) == 2:
-                    print ('lying on front')
-                if pre_res.index(max(pre_res)) == 3:
-                    print ('sitting')
-                if pre_res.index(max(pre_res)) == 4:
                     print ('standing')
+                # if pre_res.index(max(pre_res)) == 2:
+                #     print ('lying on front')
+                # if pre_res.index(max(pre_res)) == 3:
+                #     print ('sitting')
+                # if pre_res.index(max(pre_res)) == 4:
+                #     print ('standing')
             # Y_result = Y_pred[:,1]
             print(classification_report(Y_true, Y_result, target_names = target_names))  
 
@@ -219,9 +220,8 @@ class train_svm():
             print(classification_report(Y_true, Y_pred, target_names = target_names))  
             np.savetxt(self.np_path+'Y_true.txt', Y_true, fmt = '%d')
             np.savetxt(self.np_path+'Y_pred.txt', Y_pred, fmt = '%d')
-        print(classification_report(Y_true, Y_pred, target_names = target_names))  
+        # print(classification_report(Y_true, Y_pred, target_names = target_names))  
         print()
-
         print('SVM model saving ......')
         # model_save_path = '/home/hts/posture_classification_based_pose/svm/train_madel2.m'
         joblib.dump(clf, self.model_save_path)
@@ -231,6 +231,7 @@ class train_svm():
     def predict_pic(self, use_pro = True):
 
         my_clf = joblib.load(self.model_path)
+        print('loading model suc')
         if use_pro == Ture:
             my_pre = my_clf.predict_proba(self.feature)
             for pre_res in my_pre:
@@ -238,13 +239,13 @@ class train_svm():
                 if pre_res.index(max(pre_res)) == 0:
                     print ('lying')
                 if pre_res.index(max(pre_res)) == 1:
-                    print ('lie on the side')
-                if pre_res.index(max(pre_res)) == 2:
-                    print ('lying on front')
-                if pre_res.index(max(pre_res)) == 3:
-                    print ('sitting')
-                if pre_res.index(max(pre_res)) == 4:
-                    print ('standing')               
+                    print ('standing')
+                # if pre_res.index(max(pre_res)) == 2:
+                #     print ('lying on front')
+                # if pre_res.index(max(pre_res)) == 3:
+                #     print ('sitting')
+                # if pre_res.index(max(pre_res)) == 4:
+                #     print ('standing')               
         else:
             my_pre = my_clf.predict(self.feature)
         # target_names = ['lying', 'lie on the side', 'sitting', 'standing']
@@ -253,48 +254,49 @@ class train_svm():
         
         return
     
-    def predict_video(self, use_pro = False):
-
+    def predict_video(self, use_pro = True):
+        print('predict video start')
         my_clf = joblib.load(self.model_path)
+        print('loading model suc')
         print("Detailed classification report:")  
         print()  
-        target_names = ['lying', 'lie on the side', 'sitting', 'standing']
+        target_names = ['lying', 'standing']
         if use_pro == True:
-            Y_true, Y_pred = Y_test.ravel(), clf.predict_proba(X_test)
+            Y_true, Y_pred = self.label.ravel(),  my_clf.predict_proba(self.feature)
             # Y_result = Y_pred[:,1]
             print(Y_pred)
             # print(Y_result)
             # print(classification_report(Y_true, Y_result, target_names = target_names))  
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%f')
+            np.savetxt('/home/hts/Desktop/kinect_predict/Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt('/home/hts/Desktop/kinect_predict/Y_pred.txt', Y_pred, fmt = '%f')
             # np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_result.txt', Y_result, fmt = '%f')
             Y_result = []
             # np.savetxt(self.np_path+'Y_true.txt', Y_true, fmt = '%d')
             # np.savetxt(self.np_path+'Y_pred.txt', Y_pred, fmt = '%f')
             for pre_res in Y_pred:
-                print(pre_res)
+                # print(pre_res)
                 pre_res = pre_res.tolist()
                 Y_result.append(pre_res.index(max(pre_res))+1)
                 if pre_res.index(max(pre_res)) == 0:
                     print ('lying')
                 if pre_res.index(max(pre_res)) == 1:
-                    print ('lie on the side')
-                if pre_res.index(max(pre_res)) == 2:
-                    print ('lying on front')
-                if pre_res.index(max(pre_res)) == 3:
-                    print ('sitting')
-                if pre_res.index(max(pre_res)) == 4:
                     print ('standing')
+                # if pre_res.index(max(pre_res)) == 2:
+                #     print ('lying on front')
+                # if pre_res.index(max(pre_res)) == 3:
+                #     print ('sitting')
+                # if pre_res.index(max(pre_res)) == 4:
+                #     print ('standing')
             # Y_result = Y_pred[:,1]
             print(classification_report(Y_true, Y_result, target_names = target_names))  
 
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_result.txt', Y_result, fmt = '%f')
+            np.savetxt('/home/hts/Desktop/kinect_predict/Y_result.txt', Y_result, fmt = '%f')
 
         else:
-            Y_true, Y_pred = Y_test.ravel(), clf.predict(X_test)
+            Y_true, Y_pred = Y_test.ravel(),  my_clf.predict(X_test)
             print(classification_report(Y_true, Y_pred, target_names = target_names))  
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_true.txt', Y_true, fmt = '%d')
-            np.savetxt('/home/hts/posture_classification_based_pose/svm/Y_pred.txt', Y_pred, fmt = '%d')
+            np.savetxt('/home/hts/Desktop/kinect_predict/Y_true.txt', Y_true, fmt = '%d')
+            np.savetxt('/home/hts/Desktop/kinect_predict/Y_pred.txt', Y_pred, fmt = '%d')
             print(classification_report(Y_true, Y_pred, target_names = target_names))
         
         return
@@ -322,15 +324,15 @@ class train_svm():
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--keypoints_path", type = str, default = '/home/hts/Desktop/04keypoints/test2/',
+    parser.add_argument("--keypoints_path", type = str, default = '/home/hts/Desktop/kinect_test/',
                         help = "path to the folder for the json to be processed (default: None)")
-    parser.add_argument("--model_save_path", type = str, default = '/home/hts/Desktop/model/train_madeltest2_1.m',
+    parser.add_argument("--model_save_path", type = str, default = '/home/hts/Desktop/model/model1.m',
                         help = "path to the folder for the json to be processed (default: None)")
-    parser.add_argument("--npsave_path", type = str, default = '/home/hts/Desktop/04nppath/test2/',
+    parser.add_argument("--npsave_path", type = str, default = '/home/hts/Desktop/kinect_nppath/',
                         help = "path to the folder for the results to be saved (default: None)")
     parser.add_argument("--command", type = str, default = 'pro_svm_training',
                         help = "next command(default: 'svm_training')")    
-    parser.add_argument("--model_path", type = str, default = None,
+    parser.add_argument("--model_path", type = str, default = '/home/hts/Desktop/model/model1.m',
                         help="path to the model to be loaded (default: None)")    
     # parser.add_argument("--label", type=str, default=None,
     #                     help="label (default: None)")
